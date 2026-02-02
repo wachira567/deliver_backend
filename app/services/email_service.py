@@ -8,7 +8,7 @@ mail = Mail()
 
 class EmailService:
     
-    @staticmethod
+    @staticmethod # Holds all email sending functions
     def send_status_update(user_email, order_id, status):
         """
         Send email when order status changes

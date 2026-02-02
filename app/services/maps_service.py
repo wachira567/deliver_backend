@@ -34,9 +34,9 @@ class MapsService:
                 mode="driving"
             )
             
-            if result['rows'][0]['elements'][0]['status'] == 'OK':
-                distance_meters = result['rows'][0]['elements'][0]['distance']['value']
-                duration_seconds = result['rows'][0]['elements'][0]['duration']['value']
+            if result['rows'][0]['elements'][0]['status'] == 'OK': # Checks if google has successfully calculated the distance
+                distance_meters = result['rows'][0]['elements'][0]['distance']['value'] # Extracts distance in meters
+                duration_seconds = result['rows'][0]['elements'][0]['duration']['value'] # Extracts duration in seconds
                 
                 return {
                     'distance_km': round(distance_meters / 1000, 2),

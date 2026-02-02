@@ -15,3 +15,16 @@ naming_convention = {
 db = SQLAlchemy(metadata=MetaData(naming_convention=naming_convention))
 bcrypt = Bcrypt()
 jwt = JWTManager()
+
+@jwt.additional_claims_loader
+def add_claims_to_jwt(identity):
+    from models.user import User
+
+    user = User.query.get(identity)
+    if not user:
+        return {}
+
+    return {
+        "role": user.role
+    }
+

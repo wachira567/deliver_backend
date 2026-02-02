@@ -1,15 +1,3 @@
-"""
-id
-full-name
-email
-phone
-password_hash
-role
-is_active
-created_at
-"""
-
-
 from extensions import  db, bcrypt
 from sqlalchemy.orm import validates
 from sqlalchemy_serialize import SerializerMixin

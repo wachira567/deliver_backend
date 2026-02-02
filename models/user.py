@@ -1,6 +1,6 @@
 from extensions import  db, bcrypt
 from sqlalchemy.orm import validates
-from sqlalchemy_serialize import SerializerMixin
+from sqlalchemy_serializer import SerializerMixin
 import phonenumbers
 
 

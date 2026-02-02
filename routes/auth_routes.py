@@ -1,6 +1,5 @@
 from flask_restful import Resource, reqparse
 import phonenumbers
-from flask_bycrypt import generate_password_hash
 from flask import jsonify
 from models.user import User
 from sqlalchemy.exc import IntegrityError
@@ -29,16 +28,15 @@ class RegisterResource(Resource):
             phone = User.query.filter_by(phone=data.get('phone')).first()
             if phone:
                 return {"message": "Phone number already taken"}, 422
-            pw_hash = generate_password_hash(data["password"]).decode("utf-8")
+            password = data.pop("password")
+            user = User(**data)
+            user.set_password(password)
 
-            del data["password"]
-
-            user = User(**data, password_hash=pw_hash)
             db.session.add(user)
             db.session.commit()
 
-            access_token = create_access_token(identity=user)
-            refresh_token = create_refresh_token(identity=user)
+            access_token = create_access_token(identity=user.id)
+            refresh_token = create_refresh_token(identity=user.id)
 
 
             return (
@@ -71,26 +69,27 @@ class LoginResource(Resource):
         if not all([email, password]):
             return jsonify({"error": "email and password are required"}), 400
         
-        user = User.query.filter_by(email=data['email']).first()
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "Invalid email or password"}), 401
         if not user.is_active:
-            return jsonify ({
-                "error": "Account is disabled"
-            }), 403
+            return jsonify({"error": "Account is disabled"}), 403
 
 
-        if user and user.check_password(data['password']):
-            access_token = create_access_token(identity=user)
-            refresh_token = create_refresh_token(identity=user)
+        if not user.check_password(password):
+            return jsonify({"error": "Invalid email or password"}), 401
 
-            return jsonify(
-                {
-                    "message": "Login successful",
-                    "user": user.to_dict(),
-                    "access_token": access_token,
-                    "refresh_token": refresh_token,
-                }
-            ),200
-        return jsonify({"error": "Invalid email or password"}), 401
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
+
+        return jsonify(
+            {
+                "message": "Login successful",
+                "user": user.to_dict(),
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }
+        ),200
     
 
 class MeResource(Resource):
@@ -123,7 +122,7 @@ class RefreshResource(Resource):
         if not user:
             return {"message": "User not found"}, 404
 
-        access_token = create_access_token(identity=user)
+        access_token = create_access_token(identity=user.id)
 
         return {
             "access_token": access_token

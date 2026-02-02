@@ -12,6 +12,7 @@ flask-jwt-extended = "*"
 python-dotenv = "*"
 psycopg2-binary = "*"
 flask-restful = "*"
+ruff = "*"
 
 [dev-packages]
 

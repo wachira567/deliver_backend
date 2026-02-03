@@ -11,12 +11,16 @@ flask-migrate = "*"
 flask-jwt-extended = "*"
 flask-cors = "*"
 flask-bcrypt = "*"
-flask-mail = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
 googlemaps = "*"
+ruff = "*"
+phonenumbers = "*"
+sqlalchemy-serializer = "*"
+flask-mail = "*"
 
 [dev-packages]
+pytest = "*"
 
 [requires]
 python_version = "3.8"

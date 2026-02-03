@@ -1,14 +1,11 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from flask_cors import CORS
 from config import Config
+from extensions import db, jwt
 
-db = SQLAlchemy()
 migrate = Migrate()
-jwt = JWTManager()
 mail = Mail()
 
 def create_app(config_class=Config):
@@ -21,4 +18,15 @@ def create_app(config_class=Config):
     mail.init_app(app)
     CORS(app)
     
+    # Register API resources
+    from flask_restful import Api
+    from app.routes.auth_routes import RegisterResource, LoginResource, MeResource, RefreshResource
+    
+    api = Api(app)
+    api.add_resource(RegisterResource, "/auth/register")
+    api.add_resource(LoginResource, "/auth/login")
+    api.add_resource(MeResource, "/auth/me")
+    api.add_resource(RefreshResource, "/auth/refresh")
+    
     return app
+

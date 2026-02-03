@@ -17,6 +17,9 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     mail.init_app(app)
     CORS(app)
+
+    from app.routes.admin_routes import admin_bp
+    app.register_blueprint(admin_bp)
     
     # Register API resources
     from flask_restful import Api

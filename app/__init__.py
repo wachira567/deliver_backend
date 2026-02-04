@@ -19,7 +19,7 @@ def create_app(config_class=Config):
     CORS(app)
 
     # Create API Instance
-    from flask_restful
+    from flask_restful import Api
     api = Api(app)
 
 

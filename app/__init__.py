@@ -27,6 +27,28 @@ def create_app(config_class=Config):
     api.add_resource(LoginResource, "/auth/login")
     api.add_resource(MeResource, "/auth/me")
     api.add_resource(RefreshResource, "/auth/refresh")
-    
+
+    @app.cli.command("add-courier-constraint")
+    def add_courier_constraint():
+        """Add DB check constraint to ensure couriers include vehicle info.
+
+        Usage: flask add-courier-constraint
+        """
+        with app.app_context():
+            conn = db.engine.connect()
+            # Check if constraint exists
+            exists = conn.execute(
+                "SELECT constraint_name FROM information_schema.table_constraints WHERE table_name='users' AND constraint_type='CHECK' AND constraint_name='ck_courier_vehicle_required'"
+            ).fetchone()
+
+            if exists:
+                print("Constraint 'ck_courier_vehicle_required' already exists.")
+                return
+
+            conn.execute(
+                "ALTER TABLE users ADD CONSTRAINT ck_courier_vehicle_required CHECK ((role != 'courier') OR (vehicle_type IS NOT NULL AND plate_number IS NOT NULL));"
+            )
+            print("Constraint 'ck_courier_vehicle_required' added successfully.")
+
     return app
 

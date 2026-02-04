@@ -16,12 +16,34 @@ register_parser.add_argument("full_name", type=str,required=True, help="Full nam
 register_parser.add_argument("email", type=str,required=True, help="Email is required")
 register_parser.add_argument("password",type=str ,required=True, help="Password is required")
 register_parser.add_argument("phone", type=str,required=False)
+# role determines permissions; default to customer
+register_parser.add_argument("role", type=str, required=False, choices=("customer","courier","admin"), default="customer", help="Invalid role")
+register_parser.add_argument("vehicle_type", type=str, required=False)
+register_parser.add_argument("plate_number", type=str, required=False)
 
 #POST /auth/register → show messages auto-login.
 class RegisterResource(Resource):
     def post(self):
         try:
             data = register_parser.parse_args()
+            role = data.get("role", "customer")
+
+            # Normalize and validate courier-specific fields
+            vehicle = (data.get("vehicle_type") or "").strip()
+            plate = (data.get("plate_number") or "").strip().upper()
+
+            if role == "courier":
+                if not vehicle or not plate:
+                    return {"message": "Vehicle type and plate number are required for couriers"}, 422
+                import re
+                if not re.match(r'^[A-Z0-9-]{3,20}$', plate):
+                    return {"message": "Invalid plate number format"}, 422
+                data["vehicle_type"] = vehicle
+                data["plate_number"] = plate
+            else:
+                # Non-couriers should not submit courier-only fields
+                if vehicle or plate:
+                    return {"message": "Vehicle info only allowed for couriers"}, 422
             email = User.query.filter_by(email=data['email']).first()
             if email:
                 return {"message": "Email already  taken"}, 422

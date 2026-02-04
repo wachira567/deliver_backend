@@ -114,4 +114,4 @@ credentials.json
 
 # Node modules (if you have any frontend)
 node_modules/
-npm-debug.log*
+npm-debug.log*.env

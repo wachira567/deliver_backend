@@ -17,38 +17,47 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     mail.init_app(app)
     CORS(app)
-    
-    # Register API resources
-    from flask_restful import Api
-    from app.routes.auth_routes import RegisterResource, LoginResource, MeResource, RefreshResource
-    
+
+    # Create API Instance
+    from flask_restful
     api = Api(app)
+
+
+    # Register Auth resources
+    from app.routes.auth_routes import RegisterResource, LoginResource, MeResource, RefreshResource
     api.add_resource(RegisterResource, "/auth/register")
     api.add_resource(LoginResource, "/auth/login")
     api.add_resource(MeResource, "/auth/me")
     api.add_resource(RefreshResource, "/auth/refresh")
 
-    @app.cli.command("add-courier-constraint")
-    def add_courier_constraint():
-        """Add DB check constraint to ensure couriers include vehicle info.
+    # Register admin resources
+    from app.routes.admin_routes import (
+        AdminOrdersResource, 
+        AdminAssignCourierResource,
+        AdminStatsResource, 
+        AdminUpdateOrderStatusResource
+    )
 
-        Usage: flask add-courier-constraint
-        """
-        with app.app_context():
-            conn = db.engine.connect()
-            # Check if constraint exists
-            exists = conn.execute(
-                "SELECT constraint_name FROM information_schema.table_constraints WHERE table_name='users' AND constraint_type='CHECK' AND constraint_name='ck_courier_vehicle_required'"
-            ).fetchone()
+    api.add_resource(AdminOrdersResource, "/admin/orders")
+    api.add_resource(AdminAssignCourierResource, "/admin/orders/<int:order_id>/assign")
+    api.add_resource(AdminStatsResource, "/admin/stats")
+    api.add_resource(AdminUpdateOrderStatusResource, "/admin/orders/<int:order_id>/status")
 
-            if exists:
-                print("Constraint 'ck_courier_vehicle_required' already exists.")
-                return
 
-            conn.execute(
-                "ALTER TABLE users ADD CONSTRAINT ck_courier_vehicle_required CHECK ((role != 'courier') OR (vehicle_type IS NOT NULL AND plate_number IS NOT NULL));"
-            )
-            print("Constraint 'ck_courier_vehicle_required' added successfully.")
+    # Register courier routes
+    from app.routes.courier_routes import (
+        CourierOrdersResource,
+        CourierOrderDetailResource,
+        CourierUpdateStatusResource,
+        CourierUpdateLocationResource,
+        CourierStatsResource
+    )
 
+    api.add_resoure(CourierOrdersResource, "/courier/orders")
+    api.add_resource(CourierOrderDetailResource,  "/courier/orders/<int:order_id>")
+    api.add_reesourc(CourierUpdateStatusResource, "/courier/orders/<int:order_id>/status")
+    api.add_resource(CourierUpdateLocationResource, "/courier/orders/<int:order_id>/location")
+    api.add_resource(CourierStatsResource, "/courier/stats")
+    
     return app
 

@@ -59,8 +59,8 @@ class Payment(db.Model):
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.Text)
     
-    # Metadata
-    metadata = db.Column(db.JSON)  # For additional payment gateway data
+    # Gateway metadata (avoid reserved name)
+    gateway_metadata = db.Column(db.JSON)  # For additional payment gateway data
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

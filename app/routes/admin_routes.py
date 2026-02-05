@@ -11,7 +11,7 @@ from extensions import db
 from app.models.user import User
 from app.models.delivery import DeliveryOrder, OrderStatus
 from app.models.order_tracking import OrderTracking
-from app.models.notification import Notification
+# from app.models.notification import Notification
 from app.utils.role_guards import admin_required
 from app.services.email_service import EmailService
 

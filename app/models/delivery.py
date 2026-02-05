@@ -24,7 +24,7 @@ class DeliveryOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tracking_number = db.Column(db.String(50), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    courier_id = db.Column(db.Integer, db.ForeignKey('couriers.id'))
+    courier_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Location data
     pickup_lat = db.Column(db.Numeric(10, 8), nullable=False)
@@ -70,6 +70,8 @@ class DeliveryOrder(db.Model):
     payment = db.relationship('Payment', backref='order', uselist=False, lazy=True)
     notifications = db.relationship('Notification', backref='order', lazy=True)
     customer = db.relationship('User', foreign_keys=[user_id], backref='orders')
+    # Couriers are represented by users with role='courier'
+    courier = db.relationship('User', foreign_keys=[courier_id], backref='assigned_orders')
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -53,9 +53,9 @@ def create_app(config_class=Config):
         CourierStatsResource
     )
 
-    api.add_resoure(CourierOrdersResource, "/courier/orders")
+    api.add_resource(CourierOrdersResource, "/courier/orders")
     api.add_resource(CourierOrderDetailResource,  "/courier/orders/<int:order_id>")
-    api.add_reesourc(CourierUpdateStatusResource, "/courier/orders/<int:order_id>/status")
+    api.add_resource(CourierUpdateStatusResource, "/courier/orders/<int:order_id>/status")
     api.add_resource(CourierUpdateLocationResource, "/courier/orders/<int:order_id>/location")
     api.add_resource(CourierStatsResource, "/courier/stats")
     

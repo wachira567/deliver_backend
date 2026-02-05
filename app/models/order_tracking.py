@@ -25,14 +25,14 @@ class OrderTracking(db.Model):
     # Additional info
     notes = db.Column(db.Text)
     photo_url = db.Column(db.String(500))  # Optional photo proof
-    courier_id = db.Column(db.Integer, db.ForeignKey('couriers.id'))
+    courier_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    courier = db.relationship('Courier', backref='tracking_updates', lazy=True)
+    courier = db.relationship('User', backref='tracking_updates', lazy=True)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

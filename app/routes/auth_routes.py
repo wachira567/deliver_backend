@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 import phonenumbers
-from flask import jsonify
+from flask import jsonify, request
 from app.models.user import User
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import (
@@ -11,22 +11,26 @@ from flask_jwt_extended import (
 )
 from extensions import db
 
-register_parser = reqparse.RequestParser()
-register_parser.add_argument("full_name", type=str,required=True, help="Full name is required")
-register_parser.add_argument("email", type=str,required=True, help="Email is required")
-register_parser.add_argument("password",type=str ,required=True, help="Password is required")
-register_parser.add_argument("phone", type=str,required=True, help="Phone number is required")
-# role determines permissions; default to customer
-register_parser.add_argument("role", type=str, required=False, choices=("customer","courier","admin"), default="customer", help="Invalid role")
-register_parser.add_argument("vehicle_type", type=str, required=False)
-register_parser.add_argument("plate_number", type=str, required=False)
-
 #POST /auth/register → show messages auto-login.
 class RegisterResource(Resource):
     def post(self):
         try:
-            data = register_parser.parse_args()
+            data = request.get_json()
+            
+            if not data:
+                return {"message": "Request body is required"}, 400
+            
+            # Validate required fields
+            required_fields = ["full_name", "email", "password", "phone"]
+            for field in required_fields:
+                if field not in data:
+                    return {"message": f"{field} is required"}, 400
+            
             role = data.get("role", "customer")
+            
+            # Validate role
+            if role not in ("customer", "courier", "admin"):
+                return {"message": "Invalid role"}, 400
 
             # Normalize and validate courier-specific fields
             vehicle = (data.get("vehicle_type") or "").strip()
@@ -74,43 +78,45 @@ class RegisterResource(Resource):
             return {"message": str(e), "error": "ValueError"}, 422
         except IntegrityError as e:
             return {"message": "Missing Values", "error": "IntegrityError"}, 422
+        except Exception as e:
+            return {"message": str(e), "error": "UnexpectedError"}, 400
 
 #POST /auth/login → store access_token, user.role.
 
-login_parser = reqparse.RequestParser()
-login_parser.add_argument("email", type=str, required=True, help="Email is required")
-login_parser.add_argument("password", type=str, required=True, help="Password is required")
 class LoginResource(Resource):
     def post(self):
-        data = login_parser.parse_args()
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return {"error": "Request body is required"}, 400
+            
+            email = data.get("email")
+            password = data.get("password")
 
-        email = data.get("email")
-        password = data.get("password")
+            if not all([email, password]):
+                return {"error": "Email and password are required"}, 400
+            
+            user = User.query.filter_by(email=email).first()
+            if not user:
+                return {"error": "Invalid email or password"}, 401
+            if not user.is_active:
+                return {"error": "Account is inactive. Please contact support."}, 403
+            
+            if not user.check_password(password):
+                return {"error": "Invalid email or password"}, 401
 
-        if not all([email, password]):
-            return {"error": "Email and password are required"}, 401
-        
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return {"error": "Invalid email or password"}, 401
-        if not user.is_active:
-            return {"error": "Account is inactive. Please contact support."}, 403
-                # In auth_routes.py, validate phone before DB check if provided:
+            access_token = create_access_token(identity=user.id)
+            refresh_token = create_refresh_token(identity=user.id)
 
-
-
-        if not user.check_password(password):
-            return {"error": "Invalid email or password"}, 401
-
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
-
-        return {
-            "message": "Login successful",
-            "user": user.to_dict(),
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-        }, 200  
+            return {
+                "message": "Login successful",
+                "user": user.to_dict(),
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }, 200
+        except Exception as e:
+            return {"error": str(e)}, 400
     
 
 class MeResource(Resource):

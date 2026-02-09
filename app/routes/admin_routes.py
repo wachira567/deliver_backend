@@ -15,6 +15,60 @@ from app.models.order_tracking import OrderTracking
 from app.utils.role_guards import admin_required
 from app.services.email_service import EmailService
 
+# GET ALL USERS
+class AdminUsersResource(Resource):
+    @jwt_required()
+    @admin_required
+    def get(self):
+        """
+        Get all users in the system with optional filters
+        GET /admin/users?role=courier&is_active=true&limit=20&page=1
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument('role', type=str, required=False, choices=['courier', 'customer', 'admin'])
+        parser.add_argument('is_active', type=str, required=False)
+        parser.add_argument('limit', type=int, default=20, required=False)
+        parser.add_argument('page', type=int, default=1, required=False)
+        
+        args = parser.parse_args()
+        
+        try:
+            # Base query
+            query = User.query
+            
+            # Apply filters
+            if args['role']:
+                query = query.filter_by(role=args['role'])
+            
+            if args['is_active'] is not None:
+                is_active = args['is_active'].lower() == 'true'
+                query = query.filter_by(is_active=is_active)
+            
+            # Get total count
+            total = query.count()
+            
+            # Apply pagination
+            users = query.order_by(User.created_at.desc())\
+                         .limit(args['limit'])\
+                         .offset((args['page'] - 1) * args['limit'])\
+                         .all()
+            
+            # Serialize users (excluding password_hash is handled by serialize_rules)
+            users_data = [user.to_dict() for user in users]
+            
+            return {
+                'users': users_data,
+                'pagination': {
+                    'total': total,
+                    'page': args['page'],
+                    'limit': args['limit'],
+                    'pages': (total + args['limit'] - 1) // args['limit']
+                }
+            }, 200
+        
+        except Exception as e:
+            return {'error': f'Failed to fetch users: {str(e)}'}, 500
+
 
 # GET ALL ORDERS
 class AdminOrdersResource(Resource):

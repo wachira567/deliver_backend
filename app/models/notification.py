@@ -21,7 +21,8 @@ class Notification(db.Model, SerializerMixin):
     # Notis data
     type = db.Column(db.String(50), nullable=False)
     message = db.Column(db.Text, nullable= False)
-    is_read = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
+    read_at = db.Column(db.DateTime)
 
     # Timestamps
     created_at = db.Column(db.DateTime, default = datetime.utcnow)
@@ -35,11 +36,12 @@ class Notification(db.Model, SerializerMixin):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.order_id,
+            'user_id': self.user_id,
+            'order_id': self.order_id,
             'type': self.type,
             'message': self.message,
             'is_read': self.is_read,
+            'read_at': self.read_at.isoformat() if self.read_at else None,
             'created_at': self.created_at.isoformat()
-
         }
         

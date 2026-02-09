@@ -6,7 +6,7 @@ from decimal import Decimal
 from app import db
 from app.models.delivery import DeliveryOrder, OrderStatus, WeightCategory
 from app.models.order_tracking import OrderTracking
-from app.models.payments import Payment
+from app.models.payment import Payment
 from app.models import User, Notification
 from app.services.pricing_service import PricingService
 from app.services.maps_service import MapsService
@@ -383,11 +383,11 @@ def get_order_tracking(order_id):
     order = DeliveryOrder.query.get_or_404(order_id)
     
     # Check permissions
-    if user.role == 'USER' and order.user_id != current_user_id:
+    if user.role == 'customer' and order.user_id != current_user_id:
         return jsonify({'error': 'Unauthorized access to tracking'}), 403
     
-    if user.role == 'COURIER':
-        if not user.courier_profile or order.courier_id != user.courier_profile.id:
+    if user.role == 'courier':
+        if order.courier_id != current_user_id:
             return jsonify({'error': 'Unauthorized access to tracking'}), 403
     
     tracking_history = [track.to_dict() for track in order.tracking_updates]

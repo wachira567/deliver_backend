@@ -6,6 +6,7 @@ from decimal import Decimal
 
 class OrderStatus(PyEnum):
     PENDING = 'PENDING'
+    ASSIGNED = 'ASSIGNED'
     PICKED_UP = 'PICKED_UP'
     IN_TRANSIT = 'IN_TRANSIT'
     DELIVERED = 'DELIVERED'
@@ -91,12 +92,13 @@ class DeliveryOrder(db.Model):
     
     def can_cancel(self):
         """Check if order can be cancelled"""
-        return self.status in [OrderStatus.PENDING, OrderStatus.PICKED_UP]
-    
+        return self.status in [OrderStatus.PENDING, OrderStatus.ASSIGNED, OrderStatus.PICKED_UP]
+
     def update_status(self, new_status, courier_id=None):
         """Update order status with validation"""
         status_flow = {
-            OrderStatus.PENDING: [OrderStatus.PICKED_UP, OrderStatus.CANCELLED],
+            OrderStatus.PENDING: [OrderStatus.ASSIGNED, OrderStatus.CANCELLED],
+            OrderStatus.ASSIGNED: [OrderStatus.PICKED_UP, OrderStatus.CANCELLED],
             OrderStatus.PICKED_UP: [OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
             OrderStatus.IN_TRANSIT: [OrderStatus.DELIVERED],
             OrderStatus.DELIVERED: [],

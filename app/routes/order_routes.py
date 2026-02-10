@@ -226,9 +226,7 @@ def update_destination(order_id):
         return jsonify({'error': 'Destination can only be updated for pending orders'}), 400
     
     # Validate destination data
-    is_valid, validated_data, errors = OrderValidator.validate_update_destination(
-        data, order.status.value
-    )
+    is_valid, validated_data, errors = OrderValidator.validate_update_destination(data)
     
     if not is_valid:
         return jsonify({'errors': errors}), 400

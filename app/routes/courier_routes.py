@@ -195,7 +195,7 @@ class CourierUpdateStatusResource(Resource):
             
             # If delivered, set timestamp
             if status_enum == OrderStatus.DELIVERED:
-                order.delivered_at = datetime.utcnow()
+                order.actual_delivery_time = datetime.utcnow()
             
             # Create tracking update
             tracking = OrderTracking(

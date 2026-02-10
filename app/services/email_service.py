@@ -2,9 +2,8 @@
 Email Notification Service
 Sends emails for order status updates and notifications
 """
-from flask_mail import Message, Mail
-
-mail = Mail()
+from flask_mail import Message
+from app import mail
 
 class EmailService:
     

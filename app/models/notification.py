@@ -31,7 +31,7 @@ class Notification(db.Model, SerializerMixin):
     user = db.relationship('User', backref='notifications')
 
 
-    serialize_rules = ('-user.notifications', '-order.notifications')
+    serialize_rules = ('-user.notifications',)
 
     def to_dict(self):
         return {

@@ -312,8 +312,8 @@ class AdminStatsResource(Resource):
             if delivered_orders:
                 delivery_times = []
                 for order in delivered_orders:
-                    if order.delivered_at and order.created_at:
-                        delta = order.delivered_at - order.created_at
+                    if order.actual_delivery_time and order.created_at:
+                        delta = order.actual_delivery_time - order.created_at
                         delivery_times.append(delta.total_seconds() / 60)
                 
                 if delivery_times:

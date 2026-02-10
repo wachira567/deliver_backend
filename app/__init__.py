@@ -4,7 +4,10 @@ from flask_mail import Mail
 from flask_cors import CORS
 from config import Config
 from extensions import db, jwt
+from dotenv import load_dotenv
 
+
+load_dotenv()
 
 
 migrate = Migrate()
@@ -81,8 +84,12 @@ def create_app(config_class=Config):
     api.add_resource(CourierUpdateLocationResource, "/api/courier/orders/<int:order_id>/location")
     api.add_resource(CourierStatsResource, "/api/courier/stats")
 
+    # Register Blueprint routes
+    from app.routes.order_routes import orders_bp
+    app.register_blueprint(orders_bp)
+
     from app.routes.payment_routes import payments_bp
     app.register_blueprint(payments_bp)
-    
+
     return app
 

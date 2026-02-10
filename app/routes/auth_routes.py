@@ -1,6 +1,6 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 import phonenumbers
-from flask import jsonify, request
+from flask import request
 from app.models.user import User
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import (
@@ -76,7 +76,7 @@ class RegisterResource(Resource):
             return {"message": str(e), "error": "ValidationError"}, 422
         except ValueError as e:
             return {"message": str(e), "error": "ValueError"}, 422
-        except IntegrityError as e:
+        except IntegrityError:
             return {"message": "Missing Values", "error": "IntegrityError"}, 422
         except Exception as e:
             return {"message": str(e), "error": "UnexpectedError"}, 400

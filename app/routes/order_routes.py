@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app import db
-from app.models.delivery import DeliveryOrder, OrderStatus, WeightCategory
+from app.models.delivery import DeliveryOrder, OrderStatus
 from app.models.order_tracking import OrderTracking
 from app.models.payment import Payment
 from app.models import User, Notification

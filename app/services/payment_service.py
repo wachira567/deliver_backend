@@ -17,25 +17,32 @@ class MpesaService:
     """M-Pesa Daraja API Service"""
     
     def __init__(self):
-        # Load from environment or use sandbox defaults
+        # Load all configuration from environment variables
         self.environment = os.getenv('MPESA_ENVIRONMENT', 'sandbox')
-        self.consumer_key = os.getenv(
-            'MPESA_CONSUMER_KEY', 
-            'PGpLACdDg3rcDq7cKE2shAk1ntG8v6TrTUTcVKdAnby3NoTN'
-        )
-        self.consumer_secret = os.getenv(
-            'MPESA_CONSUMER_SECRET', 
-            'xegydTwI5qolajTu8y6FAcjnnXmpGCGbmeoIZexXkdfYCSmpHm1DRgL5EHXOnmNj'
-        )
-        self.shortcode = os.getenv('MPESA_SHORTCODE', '174379')
-        self.passkey = os.getenv(
-            'MPESA_PASSKEY', 
-            'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
-        )
-        self.callback_url = os.getenv(
-            'MPESA_CALLBACK_URL', 
-            'https://your-ngrok-url.ngrok.io/api/payments/callback'
-        )
+        
+        # Consumer credentials - REQUIRED for M-Pesa to work
+        self.consumer_key = os.getenv('MPESA_CONSUMER_KEY')
+        if not self.consumer_key:
+            raise ValueError("MPESA_CONSUMER_KEY environment variable is not set")
+            
+        self.consumer_secret = os.getenv('MPESA_CONSUMER_SECRET')
+        if not self.consumer_secret:
+            raise ValueError("MPESA_CONSUMER_SECRET environment variable is not set")
+        
+        # Business shortcode (Till Number or Paybill)
+        self.shortcode = os.getenv('MPESA_SHORTCODE')
+        if not self.shortcode:
+            raise ValueError("MPESA_SHORTCODE environment variable is not set")
+        
+        # Lipa Na M-Pesa Online passkey - REQUIRED for STK Push
+        self.passkey = os.getenv('MPESA_PASSKEY')
+        if not self.passkey:
+            raise ValueError("MPESA_PASSKEY environment variable is not set")
+        
+        # Callback URL for payment confirmations
+        self.callback_url = os.getenv('MPESA_CALLBACK_URL')
+        if not self.callback_url:
+            raise ValueError("MPESA_CALLBACK_URL environment variable is not set")
         
         # Set base URL based on environment
         if self.environment == 'production':
@@ -318,5 +325,28 @@ class MpesaService:
             }
 
 
-# Singleton instance for easy importing
-mpesa_service = MpesaService()
+# Singleton instance for easy importing (lazily initialized)
+# This prevents crashes when the module is imported before environment variables are set
+_mpesa_service_instance = None
+
+def get_mpesa_service():
+    """Get or create the M-Pesa service instance lazily"""
+    global _mpesa_service_instance
+    if _mpesa_service_instance is None:
+        _mpesa_service_instance = MpesaService()
+    return _mpesa_service_instance
+
+# Legacy singleton for backwards compatibility - will fail if env vars not set
+# Use get_mpesa_service() instead for safer initialization
+try:
+    mpesa_service = MpesaService()
+except ValueError as e:
+    # Module imported before environment variables are set
+    # Use get_mpesa_service() when you need to use the service
+    mpesa_service = None
+    import warnings
+    warnings.warn(
+        f"M-Pesa service not initialized: {e}. "
+        "Use get_mpesa_service() after setting environment variables.",
+        RuntimeWarning
+    )

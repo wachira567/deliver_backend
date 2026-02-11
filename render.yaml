@@ -1,0 +1,74 @@
+# ============================================
+# Render Blueprint for Infrastructure as Code
+# ============================================
+# This file defines the Render infrastructure configuration
+# for declarative deployment (optional but recommended)
+#
+# To use: Upload this file in Render Dashboard under
+# "Blueprint" or use Render CLI with: render-blueprints render
+# ============================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web Service Configuration
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: deliveroo-api
+    env: python
+    buildCommand: pipenv install
+    startCommand: pipenv run gunicorn --chdir /Users/andrewsigei/Development/phase_5/project/Deliveroo_backend app:app --preload --timeout 120 --workers 4
+    plan: free  # Options: free, starter, standard, pro, etc.
+    
+    # Health check path
+    healthCheckPath: /health
+    
+    # Environment variables (secret values should be set in Render dashboard)
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: PYTHONUNBUFFERED
+        value: true
+      
+    # Disk mounts for persistent storage (optional)
+    # disk:
+    #   name: uploads
+    #   mountPath: /app/uploads
+    #   sizeGB: 1
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  - type: pserv
+    name: deliveroo-db
+    env: postgres
+    plan: free
+    databaseName: deliveroo
+    user: deliveroo
+
+# ---------------------------------------------------------------------------
+# Notes:
+# ---------------------------------------------------------------------------
+# 1. This blueprint file is OPTIONAL - you can also configure everything
+#    manually through the Render Dashboard
+#
+# 2. Sensitive environment variables (passwords, API keys) should NOT be
+#    listed here. Set them manually in the Render Dashboard for security
+#
+# 3. The database will be automatically linked to the web service via
+#    the DATABASE_URL environment variable (Render handles this)
+#
+# 4. To apply this blueprint:
+#    a. Push your code to GitHub
+#    b. Go to Render Dashboard → New → Blueprint
+#    c. Connect your GitHub repository
+#    d. Render will parse this file and show you a preview
+#    e. Click "Create All Resources"
+#
+# 5. For production, consider upgrading from 'free' tier for:
+#    - More worker processes
+#    - Better performance
+#    - Custom domains with SSL
+# ---------------------------------------------------------------------------
+

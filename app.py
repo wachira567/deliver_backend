@@ -15,9 +15,14 @@ from extensions import db
 # Create Flask application instance (used when running directly)
 app = create_app()
 
-app.config["JWT_SECRET_KEY"] = "super-secret-key"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 3600  # 1 hour
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 86400 * 30  # 30 days
+# JWT Configuration - Load from environment with fallbacks for development
+# CRITICAL: Set JWT_SECRET_KEY environment variable in production!
+app.config["JWT_SECRET_KEY"] = os.getenv(
+    'JWT_SECRET_KEY',
+    'dev-only-change-in-production-use-secure-random-string'
+)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES_HOURS', 1)) * 3600
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES_DAYS', 30)) * 86400
 
 # Flask shell context for easier debugging
 @app.shell_context_processor
@@ -168,4 +173,12 @@ if __name__ == '__main__':
         port=port,
         debug=debug
     )
+
+
+# ============================================
+# PRODUCTION ENTRY POINT (for Gunicorn)
+# ============================================
+# When running with gunicorn, use:
+# gunicorn --chdir /path/to/project app:app
+# ============================================
 

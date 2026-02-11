@@ -5,7 +5,7 @@ Handles M-Pesa STK Push initiation and callbacks
 Place this file in: app/routes/payments.py
 """
 from flask import Blueprint, request, jsonify
-from app.services.payment_service import mpesa_service
+from app.services.payment_service import get_mpesa_service
 from app.models.delivery import DeliveryOrder
 from app.models.payment import Payment, PaymentMethod, PaymentStatus
 from app import db
@@ -67,6 +67,9 @@ def initiate_payment():
     # Save to get payment ID before STK push
     db.session.commit()
     
+    # Get M-Pesa service instance
+    mpesa_service = get_mpesa_service()
+    
     # Initiate STK Push
     result = mpesa_service.initiate_stk_push(
         phone_number=phone_number,
@@ -115,6 +118,9 @@ def mpesa_callback():
     logger.info("M-PESA CALLBACK RECEIVED")
     logger.info(callback_data)
     logger.info("=" * 50)
+    
+    # Get M-Pesa service instance
+    mpesa_service = get_mpesa_service()
     
     # Parse the callback
     result = mpesa_service.parse_callback(callback_data)
@@ -195,7 +201,8 @@ def query_mpesa_status(checkout_request_id):
             'payment': payment.to_dict()
         }), 200
     
-    # Query M-Pesa directly
+    # Get M-Pesa service and query directly
+    mpesa_service = get_mpesa_service()
     result = mpesa_service.query_stk_status(checkout_request_id)
     
     if result.get('status') == 'completed' and payment:
@@ -232,6 +239,9 @@ def test_stk_push():
     
     if not phone:
         return jsonify({'error': 'Phone number required'}), 400
+    
+    # Get M-Pesa service instance
+    mpesa_service = get_mpesa_service()
     
     result = mpesa_service.initiate_stk_push(
         phone_number=phone,

@@ -20,7 +20,7 @@ jwt = JWTManager()
 def add_claims_to_jwt(identity):
     from app.models.user import User
 
-    user = User.query.get(identity)
+    user = User.query.get(int(identity))
     if not user:
         return {}
 

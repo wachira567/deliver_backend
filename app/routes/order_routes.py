@@ -22,7 +22,7 @@ def create_order():
     Create a new delivery order
     POST /api/orders
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     data = request.get_json()
     
     # Validate input data
@@ -132,7 +132,7 @@ def get_orders():
     - limit: number of orders per page
     - page: page number
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     # Get query parameters
@@ -179,7 +179,7 @@ def get_order(order_id):
     Get specific order details
     GET /api/orders/:id
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     order = DeliveryOrder.query.get_or_404(order_id)
@@ -212,7 +212,7 @@ def update_destination(order_id):
     Update order destination (before pickup only)
     PATCH /api/orders/:id/destination
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     order = DeliveryOrder.query.get_or_404(order_id)
     
     # Check if user owns the order
@@ -312,7 +312,7 @@ def cancel_order(order_id):
     Cancel an order (before pickup only)
     POST /api/orders/:id/cancel
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     order = DeliveryOrder.query.get_or_404(order_id)
     
@@ -375,7 +375,7 @@ def get_order_tracking(order_id):
     Get tracking history for an order
     GET /api/orders/:id/tracking
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     order = DeliveryOrder.query.get_or_404(order_id)

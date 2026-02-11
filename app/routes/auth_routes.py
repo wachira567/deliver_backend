@@ -61,8 +61,8 @@ class RegisterResource(Resource):
             db.session.add(user)
             db.session.commit()
 
-            access_token = create_access_token(identity=user.id)
-            refresh_token = create_refresh_token(identity=user.id)
+            access_token = create_access_token(identity=str(user.id))
+            refresh_token = create_refresh_token(identity=str(user.id))
 
 
             return {
@@ -106,8 +106,8 @@ class LoginResource(Resource):
             if not user.check_password(password):
                 return {"error": "Invalid email or password"}, 401
 
-            access_token = create_access_token(identity=user.id)
-            refresh_token = create_refresh_token(identity=user.id)
+            access_token = create_access_token(identity=str(user.id))
+            refresh_token = create_refresh_token(identity=str(user.id))
 
             return {
                 "message": "Login successful",
@@ -122,7 +122,7 @@ class LoginResource(Resource):
 class MeResource(Resource):
     @jwt_required()
     def get(self):
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
 
         user = User.query.get(user_id)
 
@@ -143,13 +143,13 @@ class MeResource(Resource):
 class RefreshResource(Resource):
     @jwt_required(refresh=True)
     def post(self): 
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
 
         if not user:
             return {"message": "User not found"}, 404
 
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
 
         return {
             "access_token": access_token

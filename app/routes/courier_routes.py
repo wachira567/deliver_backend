@@ -24,7 +24,7 @@ class CourierOrdersResource(Resource):
         Get all orders assigned to the current courier
         GET /courier/orders?status=ASSIGNED&limit=20&page=1
         """
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         parser = reqparse.RequestParser()
         parser.add_argument('status', type=str, required=False)
@@ -88,7 +88,7 @@ class CourierOrderDetailResource(Resource):
         Get detailed information about a specific assigned order
         GET /courier/orders/:id
         """
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         try:
             # Get the order
@@ -136,7 +136,7 @@ class CourierUpdateStatusResource(Resource):
         Update the status of an assigned order
         PATCH /courier/orders/:id/status
         """
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         args = update_status_parser.parse_args()
         
         new_status = args['status']
@@ -259,7 +259,7 @@ class CourierUpdateLocationResource(Resource):
         Update the courier's current location for an order
         PATCH /courier/orders/:id/location
         """
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         args = location_parser.parse_args()
         
         latitude = args['latitude']
@@ -328,7 +328,7 @@ class CourierStatsResource(Resource):
         Get statistics for the current courier
         GET /courier/stats
         """
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         try:
             # Total deliveries

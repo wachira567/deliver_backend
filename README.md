@@ -86,8 +86,8 @@ git push -u origin main
 4. Configure the service:
    - **Name**: `deliveroo-api` (or your preferred name)
    - **Environment**: `Python 3`
-   - **Build Command**: `pipenv install`
-   - **Start Command**: `pipenv run gunicorn --chdir /Users/andrewsigei/Development/phase_5/project/Deliveroo_backend app:app`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn --chdir /Users/andrewsigei/Development/phase_5/project/Deliveroo_backend app:app`
    - **Plan**: Select appropriate plan (Free tier available)
 
 ### Step 3: Create PostgreSQL Database

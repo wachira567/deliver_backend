@@ -15,8 +15,8 @@ services:
   - type: web
     name: deliveroo-api
     env: python
-    buildCommand: pipenv install
-    startCommand: pipenv run gunicorn --chdir /Users/andrewsigei/Development/phase_5/project/Deliveroo_backend app:app --preload --timeout 120 --workers 4
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --chdir /Users/andrewsigei/Development/phase_5/project/Deliveroo_backend app:app --preload --timeout 120 --workers 4
     plan: free  # Options: free, starter, standard, pro, etc.
     
     # Health check path

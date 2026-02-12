@@ -256,17 +256,69 @@ def test_stk_push():
 @payments_bp.route('/orders/<int:order_id>/pay', methods=['POST'])
 def pay_for_order(order_id):
     """
-    Convenience endpoint to pay for an order
-    
+    Pay for an order via M-Pesa STK Push
+
     POST /api/payments/orders/<order_id>/pay
     {
-        "phone_number": "0712345678"
+        "phone_number": "254712345678"
     }
-    
-    This is an alias for /initiate with order_id in the URL
     """
     data = request.get_json() or {}
-    data['order_id'] = order_id
-    
-    # Reuse initiate_payment logic
-    return initiate_payment()
+    phone_number = data.get('phone_number')
+
+    if not phone_number:
+        return jsonify({'error': 'Phone number is required'}), 400
+
+    order = DeliveryOrder.query.get(order_id)
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+
+    existing_payment = Payment.query.filter_by(order_id=order_id).first()
+    if existing_payment and existing_payment.is_paid():
+        return jsonify({'error': 'Order already paid'}), 400
+
+    if existing_payment:
+        payment = existing_payment
+        payment.payment_status = PaymentStatus.PROCESSING
+        payment.customer_phone = phone_number
+    else:
+        payment = Payment.create_for_order(
+            order=order,
+            payment_method='MPESA',
+            customer_phone=phone_number
+        )
+        payment.payment_status = PaymentStatus.PROCESSING
+        db.session.add(payment)
+
+    db.session.commit()
+
+    mpesa_service = get_mpesa_service()
+    result = mpesa_service.initiate_stk_push(
+        phone_number=phone_number,
+        amount=int(order.total_price),
+        order_id=order_id,
+        description=f"Deliveroo Order {order.tracking_number}"
+    )
+
+    if result['success']:
+        payment.checkout_request_id = result['checkout_request_id']
+        payment.merchant_request_id = result['merchant_request_id']
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': result['message'],
+            'payment_id': payment.id,
+            'transaction_reference': payment.transaction_reference,
+            'checkout_request_id': result['checkout_request_id'],
+            'amount': float(order.total_price),
+            'currency': order.currency
+        }), 200
+    else:
+        payment.mark_as_failed(reason=result.get('error', 'STK push failed'))
+        db.session.commit()
+
+        return jsonify({
+            'success': False,
+            'error': result.get('error', 'Payment initiation failed')
+        }), 400

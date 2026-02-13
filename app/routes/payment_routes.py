@@ -332,6 +332,7 @@ def pay_for_order(order_id):
         )
     except Exception as e:
         # Fallback if the service call crashes completely
+        logger.error(f"M-Pesa Service Exception: {str(e)}")
         result = {'success': False, 'error': str(e)}
 
     # Re-fetch payment in a new session/transaction
@@ -355,6 +356,7 @@ def pay_for_order(order_id):
             'currency': order.currency
         }), 200
     else:
+        logger.error(f"M-Pesa STK Push Failed: {result.get('error')}")
         payment.mark_as_failed(reason=result.get('error', 'STK push failed'))
         db.session.commit()
 

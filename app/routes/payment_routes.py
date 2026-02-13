@@ -419,8 +419,45 @@ def simulate_callback():
         
     db.session.commit()
     
+@payments_bp.route('/simulate-order/<int:order_id>', methods=['POST'])
+def simulate_order_payment(order_id):
+    """
+    Force-complete an order (Development/Testing Bypass)
+    
+    POST /api/payments/simulate-order/<order_id>
+    """
+    # 1. Get the order
+    order = DeliveryOrder.query.get(order_id)
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+        
+    # 2. Get or Create Payment
+    payment = Payment.query.filter_by(order_id=order_id).first()
+    if not payment:
+        payment = Payment.create_for_order(
+            order=order,
+            payment_method='MPESA',
+            customer_phone="254700000000"
+        )
+        db.session.add(payment)
+    
+    # 3. Mark as PAID
+    payment.payment_status = PaymentStatus.PAID
+    payment.paid_at = db.func.now()
+    payment.checkout_request_id = f"SIMULATED_{order_id}"
+    payment.merchant_request_id = f"SIMULATED_{order_id}"
+    
+    # 4. Generate fake receipt
+    import random
+    receipt = f"SIM{''.join([str(random.randint(0,9)) for _ in range(10)])}"
+    payment.transaction_reference = receipt
+    
+    db.session.commit()
+    
+    logger.info(f"✅ FORCED PAYMENT for Order #{order_id}")
+    
     return jsonify({
         'success': True,
-        'message': f'Payment {status} simulated',
+        'message': 'Order force-completed successfully',
         'payment': payment.to_dict()
-    })
+    }), 200

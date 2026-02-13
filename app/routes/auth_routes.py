@@ -138,22 +138,26 @@ class LoginResource(Resource):
 class MeResource(Resource):
     @jwt_required()
     def get(self):
-        user_id = int(get_jwt_identity())
+        try:
+            user_id = int(get_jwt_identity())
+            user = User.query.get(user_id)
 
-        user = User.query.get(user_id)
+            if not user:
+                return {"message": "User not found"}, 404
 
-        if not user:
-            return {"message": "User not found"}, 404
-
-        return {
-            "id": user.id,
-            "email": user.email,
-            "full_name": user.full_name,
-            "phone": user.phone,
-            "role": user.role,
-            "is_active": user.is_active,
-            "created_at": user.created_at.isoformat()
-        }, 200
+            return {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "phone": user.phone,
+                "role": user.role,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat() if user.created_at else None
+            }, 200
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to fetch user profile: {str(e)}", exc_info=True)
+            return {"message": f"Server error: {str(e)}"}, 500
 
 #refresh token endpoint
 class RefreshResource(Resource):

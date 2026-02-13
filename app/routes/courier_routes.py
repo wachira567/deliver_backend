@@ -34,6 +34,8 @@ class CourierOrdersResource(Resource):
         
         try:
             courier = User.query.get(current_user_id)
+            if not courier:
+                return {'error': 'Courier profile not found'}, 404
             
             # Base query - only orders assigned to this courier
             query = DeliveryOrder.query.filter_by(courier_id=current_user_id)
@@ -41,7 +43,8 @@ class CourierOrdersResource(Resource):
             # Apply status filter
             if args['status']:
                 try:
-                    status_enum = OrderStatus(args['status'])
+                    # Handle case-insensitivity (e.g. 'assigned' -> 'ASSIGNED')
+                    status_enum = OrderStatus(args['status'].upper())
                     query = query.filter_by(status=status_enum)
                 except ValueError:
                     return {
@@ -76,6 +79,8 @@ class CourierOrdersResource(Resource):
             }, 200
         
         except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to fetch courier orders: {str(e)}", exc_info=True)
             return {'error': f'Failed to fetch orders: {str(e)}'}, 500
 
 

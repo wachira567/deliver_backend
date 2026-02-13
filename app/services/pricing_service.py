@@ -19,7 +19,7 @@ class PricingService:
     
     # Pricing constants (in KES)
     BASE_PRICE = 150  # Base fare
-    DISTANCE_RATE = 50  # Per km
+    DISTANCE_RATE = 1  # Per km (Demo rate)
     
     # Weight category pricing
     WEIGHT_PRICES = {

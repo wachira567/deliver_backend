@@ -9,11 +9,12 @@ class Config:
         if db_url.startswith('postgres://'):
             db_url = db_url.replace('postgres://', 'postgresql://', 1)
         # Add SSL for Render PostgreSQL
-        parsed = urlparse(db_url)
-        if not parsed.query:
-            db_url += '?sslmode=require'
-        else:
-            db_url += '&sslmode=require'
+        # Check if sslmode is already present in the URL
+        if 'sslmode' not in db_url:
+            if '?' not in db_url:
+                db_url += '?sslmode=require'
+            else:
+                db_url += '&sslmode=require'
     
     SQLALCHEMY_DATABASE_URI = db_url or 'postgresql://postgres:password@localhost:5432/deliveroo'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

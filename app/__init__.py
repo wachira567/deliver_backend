@@ -1,4 +1,8 @@
-import os  
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask
 from flask import Flask
 from flask_migrate import Migrate
@@ -6,10 +10,6 @@ from flask_mail import Mail
 from flask_cors import CORS
 from config import Config
 from extensions import db, jwt
-from dotenv import load_dotenv
-
-
-load_dotenv()
 
 
 migrate = Migrate()

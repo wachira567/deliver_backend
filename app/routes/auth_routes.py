@@ -16,6 +16,7 @@ class RegisterResource(Resource):
     def post(self):
         try:
             data = request.get_json()
+            print(f"DEBUG REGISTER: Received data: {data}")
             
             if not data:
                 return {"message": "Request body is required"}, 400
@@ -51,9 +52,18 @@ class RegisterResource(Resource):
             email = User.query.filter_by(email=data['email']).first()
             if email:
                 return {"message": "Email already taken"}, 422
-            phone= User.query.filter_by(phone=data['phone']).first()
-            if phone:
+            # Format phone number validation
+            raw_phone = data.get("phone", "")
+            if raw_phone.startswith("0"):
+                data["phone"] = "+254" + raw_phone[1:]
+            elif raw_phone.startswith("254"):
+                data["phone"] = "+" + raw_phone
+            
+            # Check for existing phone AFTER formatting
+            existing_phone = User.query.filter_by(phone=data['phone']).first()
+            if existing_phone:
                 return {"message": "Phone number already taken"}, 422
+            
             password = data.pop("password")
             user = User(**data)
             user.set_password(password)
@@ -73,12 +83,18 @@ class RegisterResource(Resource):
             }, 201
         
         except phonenumbers.NumberParseException as e:
+            print(f"DEBUG REGISTER ERROR: NumberParseException: {e}")
             return {"message": str(e), "error": "ValidationError"}, 422
         except ValueError as e:
+            print(f"DEBUG REGISTER ERROR: ValueError: {e}")
             return {"message": str(e), "error": "ValueError"}, 422
-        except IntegrityError:
+        except IntegrityError as e:
+            print(f"DEBUG REGISTER ERROR: IntegrityError: {e}")
             return {"message": "Missing Values", "error": "IntegrityError"}, 422
         except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"DEBUG REGISTER ERROR: Unexpected: {e}")
             return {"message": str(e), "error": "UnexpectedError"}, 400
 
 #POST /auth/login → store access_token, user.role.

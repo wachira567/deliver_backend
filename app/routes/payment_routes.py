@@ -322,3 +322,51 @@ def pay_for_order(order_id):
             'success': False,
             'error': result.get('error', 'Payment initiation failed')
         }), 400
+
+
+@payments_bp.route('/simulate-callback', methods=['POST'])
+def simulate_callback():
+    """
+    Simulate M-Pesa callback (Development Only)
+    
+    POST /api/payments/simulate-callback
+    {
+        "checkout_request_id": "ws_CO_...",
+        "status": "success" | "failed",
+        "amount": 100,
+        "phone": "2547...",
+        "receipt_number": "QWE..."
+    }
+    """
+    data = request.get_json()
+    checkout_id = data.get('checkout_request_id')
+    status = data.get('status', 'success')
+    
+    if not checkout_id:
+        return jsonify({'error': 'checkout_request_id is required'}), 400
+        
+    payment = Payment.query.filter_by(checkout_request_id=checkout_id).first()
+    if not payment:
+        return jsonify({'error': 'Payment not found'}), 404
+        
+    if status == 'success':
+        payment.mark_as_paid(
+            receipt_number=data.get('receipt_number', 'SIMULATED123'),
+            payment_metadata={
+                'mpesa_amount': data.get('amount', payment.amount),
+                'mpesa_phone': data.get('phone', payment.customer_phone),
+                'mpesa_transaction_date': str(db.func.now())
+            }
+        )
+        logger.info(f"SIMULATED: Payment #{payment.id} marked as PAID")
+    else:
+        payment.mark_as_failed(reason="Simulated Failure")
+        logger.info(f"SIMULATED: Payment #{payment.id} marked as FAILED")
+        
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'Payment {status} simulated',
+        'payment': payment.to_dict()
+    })

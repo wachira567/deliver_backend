@@ -68,6 +68,11 @@ def initiate_payment():
     db.session.commit()
     payment_id = payment.id
     
+    # Extract data before detaching
+    amount_payload = int(order.total_price)
+    tracking_number = order.tracking_number
+    currency = order.currency
+    
     # Close session to prevent holding connection
     db.session.remove()
     
@@ -78,9 +83,9 @@ def initiate_payment():
         # Initiate STK Push
         result = mpesa_service.initiate_stk_push(
             phone_number=phone_number,
-            amount=int(order.total_price),
+            amount=amount_payload,
             order_id=order_id,
-            description=f"Deliveroo Order {order.tracking_number}"
+            description=f"Deliveroo Order {tracking_number}"
         )
     except Exception as e:
          result = {'success': False, 'error': str(e)}
@@ -318,6 +323,11 @@ def pay_for_order(order_id):
 
     db.session.commit()
     payment_id = payment.id
+    
+    # Extract data before detaching
+    amount_payload = int(order.total_price)
+    tracking_number = order.tracking_number
+    currency = order.currency
     
     # Close session to prevent holding connection during long external call
     db.session.remove()

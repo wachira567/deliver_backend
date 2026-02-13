@@ -154,6 +154,7 @@ class MpesaService:
         
         # Format phone and generate password
         phone = self._format_phone(phone_number)
+        logger.info(f"Formatted phone number for M-Pesa: {phone}")
         password, timestamp = self._generate_password()
         
         # Prepare request

@@ -367,14 +367,21 @@ def pay_for_order(order_id):
             'amount': float(order.total_price),
             'currency': order.currency
         }), 200
+            'amount': float(order.total_price),
+            'currency': order.currency
+        }), 200
     else:
-        logger.error(f"M-Pesa STK Push Failed: {result.get('error')}")
-        payment.mark_as_failed(reason=result.get('error', 'STK push failed'))
+        error_msg = result.get('error', 'Payment initiation failed')
+        logger.error(f"❌ M-Pesa STK Push Failed for Order #{order_id}: {error_msg}")
+        logger.error(f"   Raw M-Pesa Result: {result}")
+        
+        payment.mark_as_failed(reason=error_msg)
         db.session.commit()
 
         return jsonify({
             'success': False,
-            'error': result.get('error', 'Payment initiation failed')
+            'error': error_msg,
+            'details': result # Send back details for debugging (dev only, remove in prod if sensitive)
         }), 400
 
 

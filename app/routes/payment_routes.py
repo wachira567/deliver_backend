@@ -367,9 +367,6 @@ def pay_for_order(order_id):
             'amount': float(order.total_price),
             'currency': order.currency
         }), 200
-            'amount': float(order.total_price),
-            'currency': order.currency
-        }), 200
     else:
         error_msg = result.get('error', 'Payment initiation failed')
         logger.error(f"❌ M-Pesa STK Push Failed for Order #{order_id}: {error_msg}")

@@ -317,6 +317,7 @@ def pay_for_order(order_id):
         db.session.add(payment)
 
     db.session.commit()
+    payment_id = payment.id
     
     # Close session to prevent holding connection during long external call
     db.session.remove()
@@ -334,7 +335,7 @@ def pay_for_order(order_id):
         result = {'success': False, 'error': str(e)}
 
     # Re-fetch payment in a new session/transaction
-    payment = Payment.query.get(payment.id)
+    payment = Payment.query.get(payment_id)
     if not payment:
          # Should not happen if committed above
          return jsonify({'error': 'Payment record lost'}), 500

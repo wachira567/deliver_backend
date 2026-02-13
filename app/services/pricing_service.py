@@ -18,15 +18,15 @@ class PricingService:
     """Service for calculating delivery prices and estimates"""
     
     # Pricing constants (in KES)
-    BASE_PRICE = 150  # Base fare
+    BASE_PRICE = 0  # Base fare
     DISTANCE_RATE = 1  # Per km (Demo rate)
     
     # Weight category pricing
     WEIGHT_PRICES = {
-        WeightCategory.SMALL.value: 150,      # 0-5kg
-        WeightCategory.MEDIUM.value: 300,     # 5-20kg
-        WeightCategory.LARGE.value: 500,      # 20-50kg
-        WeightCategory.XLARGE.value: 1000,    # > 50kg
+        WeightCategory.SMALL.value: 0,      # 0-5kg
+        WeightCategory.MEDIUM.value: 0,     # 5-20kg
+        WeightCategory.LARGE.value: 0,      # 20-50kg
+        WeightCategory.XLARGE.value: 0,    # > 50kg
     }
     
     # Extra charge percentages

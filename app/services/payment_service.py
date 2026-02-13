@@ -70,7 +70,7 @@ class MpesaService:
         }
         
         try:
-            response = requests.get(url, headers=headers, timeout=30)
+            response = requests.get(url, headers=headers, timeout=60)
             response.raise_for_status()
             result = response.json()
             logger.info("M-Pesa access token obtained successfully")
@@ -163,7 +163,7 @@ class MpesaService:
         logger.info(f"Initiating STK push to {phone} for KES {amount}")
         
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
             result = response.json()
             
             # Check if STK push was initiated successfully
@@ -227,7 +227,7 @@ class MpesaService:
         }
         
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
             result = response.json()
             
             result_code = result.get('ResultCode')

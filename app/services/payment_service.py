@@ -50,6 +50,23 @@ class MpesaService:
         else:
             self.base_url = 'https://sandbox.safaricom.co.ke'
     
+    def _get_request_session(self):
+        """Create a session with retry logic"""
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        
+        session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS", "POST"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
+        return session
+
     def _get_access_token(self):
         """
         Generate OAuth access token from Daraja API
@@ -70,7 +87,8 @@ class MpesaService:
         }
         
         try:
-            response = requests.get(url, headers=headers, timeout=60)
+            session = self._get_request_session()
+            response = session.get(url, headers=headers, timeout=90)
             response.raise_for_status()
             result = response.json()
             logger.info("M-Pesa access token obtained successfully")
@@ -163,7 +181,8 @@ class MpesaService:
         logger.info(f"Initiating STK push to {phone} for KES {amount}")
         
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            session = self._get_request_session()
+            response = session.post(url, json=payload, headers=headers, timeout=90)
             result = response.json()
             
             # Check if STK push was initiated successfully
@@ -227,7 +246,8 @@ class MpesaService:
         }
         
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            session = self._get_request_session()
+            response = session.post(url, json=payload, headers=headers, timeout=90)
             result = response.json()
             
             result_code = result.get('ResultCode')

@@ -66,17 +66,29 @@ def initiate_payment():
     
     # Save to get payment ID before STK push
     db.session.commit()
+    payment_id = payment.id
     
-    # Get M-Pesa service instance
-    mpesa_service = get_mpesa_service()
+    # Close session to prevent holding connection
+    db.session.remove()
     
-    # Initiate STK Push
-    result = mpesa_service.initiate_stk_push(
-        phone_number=phone_number,
-        amount=int(order.total_price),
-        order_id=order_id,
-        description=f"Deliveroo Order {order.tracking_number}"
-    )
+    try:
+        # Get M-Pesa service instance
+        mpesa_service = get_mpesa_service()
+        
+        # Initiate STK Push
+        result = mpesa_service.initiate_stk_push(
+            phone_number=phone_number,
+            amount=int(order.total_price),
+            order_id=order_id,
+            description=f"Deliveroo Order {order.tracking_number}"
+        )
+    except Exception as e:
+         result = {'success': False, 'error': str(e)}
+
+    # Re-fetch payment in new transaction
+    payment = Payment.query.get(payment_id)
+    if not payment:
+         return jsonify({'error': 'Payment record lost error'}), 500
     
     if result['success']:
         # Store M-Pesa request IDs
@@ -191,7 +203,7 @@ def query_mpesa_status(checkout_request_id):
     
     Use this to check if user completed payment on their phone
     """
-    # First check our database
+    # Check DB first
     payment = Payment.query.filter_by(checkout_request_id=checkout_request_id).first()
     
     if payment and payment.is_paid():
@@ -201,9 +213,23 @@ def query_mpesa_status(checkout_request_id):
             'payment': payment.to_dict()
         }), 200
     
-    # Get M-Pesa service and query directly
-    mpesa_service = get_mpesa_service()
-    result = mpesa_service.query_stk_status(checkout_request_id)
+    # Only need payment ID for update later
+    if not payment:
+        return jsonify({'error': 'Payment not found'}), 404
+    payment_id = payment.id
+        
+    # Remove session
+    db.session.remove()
+    
+    # Query M-Pesa directly
+    try:
+        mpesa_service = get_mpesa_service()
+        result = mpesa_service.query_stk_status(checkout_request_id)
+    except Exception as e:
+        result = {'success': False, 'status': 'error', 'error': str(e)}
+    
+    # Re-fetch payment
+    payment = Payment.query.get(payment_id)
     
     if result.get('status') == 'completed' and payment:
         # Update our records if M-Pesa says it's complete
@@ -291,14 +317,27 @@ def pay_for_order(order_id):
         db.session.add(payment)
 
     db.session.commit()
+    
+    # Close session to prevent holding connection during long external call
+    db.session.remove()
 
-    mpesa_service = get_mpesa_service()
-    result = mpesa_service.initiate_stk_push(
-        phone_number=phone_number,
-        amount=int(order.total_price),
-        order_id=order_id,
-        description=f"Deliveroo Order {order.tracking_number}"
-    )
+    try:
+        mpesa_service = get_mpesa_service()
+        result = mpesa_service.initiate_stk_push(
+            phone_number=phone_number,
+            amount=int(order.total_price),
+            order_id=order_id,
+            description=f"Deliveroo Order {order.tracking_number}"
+        )
+    except Exception as e:
+        # Fallback if the service call crashes completely
+        result = {'success': False, 'error': str(e)}
+
+    # Re-fetch payment in a new session/transaction
+    payment = Payment.query.get(payment.id)
+    if not payment:
+         # Should not happen if committed above
+         return jsonify({'error': 'Payment record lost'}), 500
 
     if result['success']:
         payment.checkout_request_id = result['checkout_request_id']

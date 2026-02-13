@@ -69,7 +69,8 @@ def initiate_payment():
     payment_id = payment.id
     
     # Extract data before detaching
-    amount_payload = int(order.total_price)
+    # Ensure amount is at least 1 KES (M-Pesa minimum)
+    amount_payload = max(1, int(order.total_price))
     tracking_number = order.tracking_number
     currency = order.currency
     
@@ -325,7 +326,8 @@ def pay_for_order(order_id):
     payment_id = payment.id
     
     # Extract data before detaching
-    amount_payload = int(order.total_price)
+    # Ensure amount is at least 1 KES (M-Pesa minimum)
+    amount_payload = max(1, int(order.total_price))
     tracking_number = order.tracking_number
     currency = order.currency
     
